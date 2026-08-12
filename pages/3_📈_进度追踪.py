@@ -98,32 +98,23 @@ if history and len(history) > 0:
     diff_color = "#2ca02c" if diff < 0 else "#ff7f0e" if diff > 0 else "#666"
     diff_sign = "+" if diff > 0 else ""
     st.markdown(
-        f"""
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr);
-                    gap: 12px; margin: 16px 0;">
-            <div style="background: #fafafa; border: 1px solid #eee;
-                        border-radius: 8px; padding: 16px; text-align: center;
-                        border-top: 3px solid #1f77b4;">
-                <div style="font-size: 13px; color: #666; margin-bottom: 8px;">起始体重</div>
-                <div style="font-size: 24px; font-weight: bold; color: #1f77b4;">{start_w}</div>
-                <div style="font-size: 12px; color: #999; margin-top: 4px;">kg</div>
-            </div>
-            <div style="background: #fafafa; border: 1px solid #eee;
-                        border-radius: 8px; padding: 16px; text-align: center;
-                        border-top: 3px solid #2ca02c;">
-                <div style="font-size: 13px; color: #666; margin-bottom: 8px;">当前体重</div>
-                <div style="font-size: 24px; font-weight: bold; color: #2ca02c;">{current_w}</div>
-                <div style="font-size: 12px; color: #999; margin-top: 4px;">kg</div>
-            </div>
-            <div style="background: #fafafa; border: 1px solid #eee;
-                        border-radius: 8px; padding: 16px; text-align: center;
-                        border-top: 3px solid {diff_color};">
-                <div style="font-size: 13px; color: #666; margin-bottom: 8px;">总变化</div>
-                <div style="font-size: 24px; font-weight: bold; color: {diff_color};">{diff_sign}{diff:.1f}</div>
-                <div style="font-size: 12px; color: #999; margin-top: 4px;">kg</div>
-            </div>
-        </div>
-        """,
+        f'<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0;">'
+        f'<div style="background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 16px; text-align: center; border-top: 3px solid #1f77b4;">'
+        f'<div style="font-size: 13px; color: #666; margin-bottom: 8px;">起始体重</div>'
+        f'<div style="font-size: 24px; font-weight: bold; color: #1f77b4;">{start_w}</div>'
+        f'<div style="font-size: 12px; color: #999; margin-top: 4px;">kg</div>'
+        f'</div>'
+        f'<div style="background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 16px; text-align: center; border-top: 3px solid #2ca02c;">'
+        f'<div style="font-size: 13px; color: #666; margin-bottom: 8px;">当前体重</div>'
+        f'<div style="font-size: 24px; font-weight: bold; color: #2ca02c;">{current_w}</div>'
+        f'<div style="font-size: 12px; color: #999; margin-top: 4px;">kg</div>'
+        f'</div>'
+        f'<div style="background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 16px; text-align: center; border-top: 3px solid {diff_color};">'
+        f'<div style="font-size: 13px; color: #666; margin-bottom: 8px;">总变化</div>'
+        f'<div style="font-size: 24px; font-weight: bold; color: {diff_color};">{diff_sign}{diff:.1f}</div>'
+        f'<div style="font-size: 12px; color: #999; margin-top: 4px;">kg</div>'
+        f'</div>'
+        f'</div>',
         unsafe_allow_html=True,
     )
 

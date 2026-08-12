@@ -27,23 +27,18 @@ def _render_metrics(result: dict) -> str:
         ("脂肪", f"{result['fat']}", "g", "#8c564b"),
     ]
     cards_html = "".join(
-        f"""
-        <div style="background: #fafafa; border: 1px solid #eee;
-                    border-radius: 8px; padding: 16px; text-align: center;
-                    border-top: 3px solid {color};">
-            <div style="font-size: 13px; color: #666; margin-bottom: 8px;">{label}</div>
-            <div style="font-size: 26px; font-weight: bold; color: {color};">{value}</div>
-            <div style="font-size: 12px; color: #999; margin-top: 4px;">{unit}</div>
-        </div>
-        """
+        f'<div style="background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 16px; text-align: center; border-top: 3px solid {color};">'
+        f'<div style="font-size: 13px; color: #666; margin-bottom: 8px;">{label}</div>'
+        f'<div style="font-size: 26px; font-weight: bold; color: {color};">{value}</div>'
+        f'<div style="font-size: 12px; color: #999; margin-top: 4px;">{unit}</div>'
+        f'</div>'
         for label, value, unit, color in items
     )
-    return f"""
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr);
-                gap: 12px; margin: 16px 0;">
-        {cards_html}
-    </div>
-    """
+    # 注意：HTML 字符串前不能有空格或换行，否则 Markdown 会当成代码块
+    return (
+        f'<div style="display: grid; grid-template-columns: repeat(3, 1fr); '
+        f'gap: 12px; margin: 16px 0;">{cards_html}</div>'
+    )
 
 
 # 兼容性补丁：为老版浏览器/内嵌 webview 提供 structuredClone polyfill

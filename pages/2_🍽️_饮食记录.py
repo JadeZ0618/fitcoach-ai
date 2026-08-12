@@ -91,30 +91,28 @@ if logs:
 
     st.markdown("---")
     st.markdown(
-        f"""
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0;">
-            <div style="background: #f0f7ff; padding: 16px; border-radius: 8px; text-align: center;">
-                <div style="font-size: 13px; color: #666;">总热量</div>
-                <div style="font-size: 24px; font-weight: bold; color: #1f77b4;">{total_cal:.0f}</div>
-                <div style="font-size: 11px; color: #999;">大卡</div>
-            </div>
-            <div style="background: #fff5f0; padding: 16px; border-radius: 8px; text-align: center;">
-                <div style="font-size: 13px; color: #666;">蛋白质</div>
-                <div style="font-size: 24px; font-weight: bold; color: #ff7f0e;">{total_protein:.1f}</div>
-                <div style="font-size: 11px; color: #999;">g</div>
-            </div>
-            <div style="background: #f0fff4; padding: 16px; border-radius: 8px; text-align: center;">
-                <div style="font-size: 13px; color: #666;">碳水</div>
-                <div style="font-size: 24px; font-weight: bold; color: #2ca02c;">{total_carbs:.1f}</div>
-                <div style="font-size: 11px; color: #999;">g</div>
-            </div>
-            <div style="background: #fffbf0; padding: 16px; border-radius: 8px; text-align: center;">
-                <div style="font-size: 13px; color: #666;">脂肪</div>
-                <div style="font-size: 24px; font-weight: bold; color: #d4a017;">{total_fat:.1f}</div>
-                <div style="font-size: 11px; color: #999;">g</div>
-            </div>
-        </div>
-        """,
+        f'<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0;">'
+        f'<div style="background: #f0f7ff; padding: 16px; border-radius: 8px; text-align: center;">'
+        f'<div style="font-size: 13px; color: #666;">总热量</div>'
+        f'<div style="font-size: 24px; font-weight: bold; color: #1f77b4;">{total_cal:.0f}</div>'
+        f'<div style="font-size: 11px; color: #999;">大卡</div>'
+        f'</div>'
+        f'<div style="background: #fff5f0; padding: 16px; border-radius: 8px; text-align: center;">'
+        f'<div style="font-size: 13px; color: #666;">蛋白质</div>'
+        f'<div style="font-size: 24px; font-weight: bold; color: #ff7f0e;">{total_protein:.1f}</div>'
+        f'<div style="font-size: 11px; color: #999;">g</div>'
+        f'</div>'
+        f'<div style="background: #f0fff4; padding: 16px; border-radius: 8px; text-align: center;">'
+        f'<div style="font-size: 13px; color: #666;">碳水</div>'
+        f'<div style="font-size: 24px; font-weight: bold; color: #2ca02c;">{total_carbs:.1f}</div>'
+        f'<div style="font-size: 11px; color: #999;">g</div>'
+        f'</div>'
+        f'<div style="background: #fffbf0; padding: 16px; border-radius: 8px; text-align: center;">'
+        f'<div style="font-size: 13px; color: #666;">脂肪</div>'
+        f'<div style="font-size: 24px; font-weight: bold; color: #d4a017;">{total_fat:.1f}</div>'
+        f'<div style="font-size: 11px; color: #999;">g</div>'
+        f'</div>'
+        f'</div>',
         unsafe_allow_html=True,
     )
 
