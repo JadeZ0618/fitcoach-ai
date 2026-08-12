@@ -125,7 +125,7 @@ def render_poster_section(user_id, logs):
             '✨ 海报生成成功！</div>',
             unsafe_allow_html=True,
         )
-        st.image(st.session_state["poster_bytes"], use_column_width=True)
+        st.image(st.session_state["poster_bytes"], use_container_width=True)
 
         # 下载按钮
         st.download_button(
