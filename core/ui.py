@@ -1,13 +1,11 @@
 """
 FitCoach AI - 共享 UI 主题模块
 
-功能：
-1. 统一管理所有页面的 CSS 样式（配色、卡片、布局）
-2. 响应式设计：手机 < 768px 自动切换 2 列布局，桌面 >= 768px 保持 3-4 列
-3. 兼容性补丁：structuredClone polyfill + 滚动条样式
-4. 提供卡片渲染、导航栏等复用函数
-
-使用方式：在每个页面顶部调用 apply_theme()，然后用 render_nav() / render_metric_cards() 等
+设计理念（2026-08-12 重构）：
+1. 配色统一管理 - 改一处全局生效
+2. 响应式 - 手机 < 768px 自动切换 2 列布局
+3. 移动端友好 - 侧边栏默认收起 / 隐藏，底部固定 Tab 栏
+4. 兼容性补丁 - structuredClone polyfill + 滚动条
 """
 
 import streamlit as st
@@ -54,6 +52,8 @@ html, body {
 [data-testid="stAppViewContainer"] {
     overflow-y: scroll !important;
     background-color: var(--fc-bg);
+    /* 关键：让底部 Tab 栏不遮挡最后内容 */
+    padding-bottom: 72px !important;
 }
 
 /* ===== 滚动条 ===== */
@@ -72,7 +72,7 @@ h2, h3 {
     color: var(--fc-text) !important;
 }
 
-/* ===== 侧边栏美化 ===== */
+/* ===== 侧边栏美化（桌面端默认收起；移动端完全隐藏） ===== */
 [data-testid="stSidebar"] {
     background: white;
     border-right: 1px solid #eee;
@@ -177,11 +177,61 @@ h2, h3 {
     margin-top: 6px;
 }
 
-/* ===== 顶部导航栏 ===== */
-[data-testid="stPageLink-NavLink"] {
-    border-radius: var(--fc-radius-sm) !important;
-    padding: 8px 12px !important;
-    transition: background 0.2s !important;
+/* ===== Hero 欢迎语（首页顶部） ===== */
+.fc-welcome {
+    text-align: center;
+    padding: 24px 16px 8px;
+}
+.fc-welcome h1 {
+    font-size: 28px !important;
+    color: var(--fc-teal) !important;
+    margin-bottom: 8px !important;
+}
+.fc-welcome p {
+    font-size: 14px;
+    color: var(--fc-text-muted);
+    margin: 0;
+}
+
+/* ===== 表单容器（首页中央表单卡） ===== */
+.fc-form-card {
+    background: white;
+    border-radius: var(--fc-radius);
+    padding: 24px;
+    margin: 16px 0;
+    border: 1px solid #eee;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.fc-form-card .fc-form-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--fc-text);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ===== 快速示例按钮 ===== */
+.fc-quick-examples {
+    background: var(--fc-teal-light);
+    border-radius: var(--fc-radius);
+    padding: 16px;
+    margin: 12px 0;
+}
+.fc-quick-examples .fc-quick-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fc-teal);
+    margin-bottom: 10px;
+}
+.fc-quick-examples .stButton > button {
+    background: white !important;
+    border: 1px solid var(--fc-teal) !important;
+    color: var(--fc-teal) !important;
+    font-size: 12px !important;
+    padding: 6px 12px !important;
+    min-height: auto !important;
 }
 
 /* ===== 聊天消息圆角 ===== */
@@ -210,8 +260,78 @@ h2, h3 {
     color: var(--fc-blue);
 }
 
+/* ============================================================
+   底部 Tab 栏（移动端友好，桌面端也显示）
+   通过 CSS :has() 选择器找到含 4 个 page_link 的 stHorizontalBlock，
+   将其固定到屏幕底部
+   ============================================================ */
+[data-testid="stAppViewContainer"] [data-testid="stHorizontalBlock"]:has([data-testid="stPageLink-NavLink"]) {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: white !important;
+    border-top: 1px solid #e8e8e8 !important;
+    padding: 4px 8px !important;
+    padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 999 !important;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.06) !important;
+}
+
+[data-testid="stAppViewContainer"] [data-testid="stHorizontalBlock"]:has([data-testid="stPageLink-NavLink"]) [data-testid="column"] {
+    padding: 0 4px !important;
+}
+
+[data-testid="stAppViewContainer"] [data-testid="stHorizontalBlock"]:has([data-testid="stPageLink-NavLink"]) a[data-testid="stPageLink-NavLink"] {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 6px 4px !important;
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: var(--fc-radius-sm) !important;
+    margin: 0 !important;
+    min-height: 50px !important;
+    color: var(--fc-text-muted) !important;
+    text-decoration: none !important;
+}
+
+[data-testid="stAppViewContainer"] [data-testid="stHorizontalBlock"]:has([data-testid="stPageLink-NavLink"]) a[data-testid="stPageLink-NavLink"]:hover {
+    background: var(--fc-gray-light) !important;
+    border-color: var(--fc-gray-light) !important;
+    color: var(--fc-teal) !important;
+}
+
+/* 激活态（当前页面） */
+.fc-nav-active {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 6px 4px !important;
+    min-height: 50px !important;
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+    color: var(--fc-teal) !important;
+    background: var(--fc-teal-light) !important;
+    border-radius: var(--fc-radius-sm) !important;
+    font-weight: 600 !important;
+}
+
 /* ===== 响应式：手机端 (< 768px) ===== */
 @media (max-width: 768px) {
+    /* 移动端完全隐藏侧边栏（不需要，已经有底部 Tab） */
+    [data-testid="stSidebar"],
+    [data-testid="stSidebarNav"],
+    section[data-testid="stSidebar"] {
+        display: none !important;
+    }
+
     /* 卡片自动变为 2 列 */
     .fc-grid-3, .fc-grid-4 {
         grid-template-columns: repeat(2, 1fr) !important;
@@ -225,16 +345,20 @@ h2, h3 {
     .fc-hero .fc-hero-value { font-size: 26px; }
     /* 标题缩小 */
     h1 { font-size: 20px !important; }
+    .fc-welcome h1 { font-size: 22px !important; }
     /* 按钮加大触控区 */
     .stButton > button {
         min-height: 44px;
-        width: 100%;
     }
     /* 减少页面内边距 */
     [data-testid="stAppViewContainer"] .block-container {
         padding-left: 12px !important;
         padding-right: 12px !important;
         padding-top: 12px !important;
+    }
+    /* 表单卡缩小内边距 */
+    .fc-form-card {
+        padding: 16px !important;
     }
 }
 
@@ -245,6 +369,11 @@ h2, h3 {
         max-width: 900px;
     }
 }
+
+/* ===== 聊天输入框位置优化（移动端不与底部 Tab 重叠） ===== */
+[data-testid="stChatInput"] {
+    z-index: 998;
+}
 </style>
 """
 
@@ -252,30 +381,40 @@ h2, h3 {
 def apply_theme():
     """在每个页面顶部调用，应用统一主题样式。
 
-    包含：配色变量、响应式布局、卡片样式、滚动条、structuredClone 补丁。
-    一处修改，所有页面生效。
+    包含：配色变量、响应式布局、卡片样式、滚动条、structuredClone 补丁、
+    移动端侧边栏隐藏、底部 Tab 栏 fixed 定位。
     """
     st.markdown(_THEME_CSS, unsafe_allow_html=True)
 
 
-def render_nav(current="home"):
-    """渲染顶部导航栏（手机和桌面都显示）。
+def render_bottom_nav(current="home"):
+    """渲染底部 Tab 栏（手机和桌面都显示）。
+
+    通过 CSS :has() 选择器自动定位到屏幕底部。
+    当前页面用高亮激活样式显示。
 
     Args:
-        current: 当前页面标识，用于高亮
+        current: 当前页面标识
             "home" / "chat" / "diet" / "progress"
     """
     pages = [
-        ("main.py", "首页", "🔥"),
-        ("pages/1_🤖_AI对话.py", "AI 对话", "🤖"),
-        ("pages/2_🍽️_饮食记录.py", "饮食", "🍽️"),
-        ("pages/3_📈_进度追踪.py", "进度", "📈"),
+        ("main.py", "🔥", "首页", "home"),
+        ("pages/1_🤖_AI对话.py", "🤖", "AI", "chat"),
+        ("pages/2_🍽️_饮食记录.py", "🍽️", "饮食", "diet"),
+        ("pages/3_📈_进度追踪.py", "📈", "进度", "progress"),
     ]
-    cols = st.columns(len(pages))
-    for i, (page, label, icon) in enumerate(pages):
+    cols = st.columns(4)
+    for i, (page, icon, label, key) in enumerate(pages):
         with cols[i]:
-            st.page_link(page, label=label, icon=icon, use_container_width=True)
-    st.markdown("---")
+            if key == current:
+                # 当前页面：显示高亮激活样式（不是链接，不能点击）
+                st.markdown(
+                    f'<div class="fc-nav-active">{icon}<span>{label}</span></div>',
+                    unsafe_allow_html=True,
+                )
+            else:
+                # 其他页面：用 st.page_link 渲染为可点击按钮（Streamlit 处理路由）
+                st.page_link(page, label=f"{icon} {label}", use_container_width=True)
 
 
 def render_metric_cards(items, cols=3):
@@ -315,6 +454,33 @@ def render_hero(label, value, subtitle=""):
         f'</div>',
         unsafe_allow_html=True,
     )
+
+
+def render_welcome(title, subtitle=""):
+    """渲染首页顶部欢迎语。"""
+    sub_html = f'<p>{subtitle}</p>' if subtitle else ""
+    st.markdown(
+        f'<div class="fc-welcome">'
+        f'<h1>{title}</h1>'
+        f'{sub_html}'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def render_form_card(title, icon="📝"):
+    """渲染一个表单容器卡（替代把表单塞进侧边栏）。
+
+    用法（with 语法）：
+        with render_form_card("你的身体数据", "🧍"):
+            st.text_input(...)
+            if st.form_submit_button("提交"):
+                ...
+
+    注意：实际渲染的是一个 <div> 容器，markdown 标签无法 with，
+    所以请用 render_form_card_open/close 或简化版本。
+    """
+    pass  # 占位，实际不用 with，直接渲染
 
 
 def render_diet_log_item(name, grams, calories):

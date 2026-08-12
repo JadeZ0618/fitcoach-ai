@@ -12,19 +12,27 @@ from db.database import (
     get_weight_history,
     get_latest_user,
 )
-from core.ui import apply_theme, render_nav, render_metric_cards
+from core.ui import apply_theme, render_bottom_nav, render_metric_cards
 
 # 页面配置（必须是第一个 Streamlit 命令）
-st.set_page_config(page_title="进度追踪", page_icon="📈")
+st.set_page_config(
+    page_title="进度追踪",
+    page_icon="📈",
+    initial_sidebar_state="collapsed",  # 默认收起侧边栏
+)
 
 # 应用统一主题
 apply_theme()
 
-# 顶部导航栏
-render_nav(current="progress")
-
-st.title("进度追踪")
-st.markdown("记录体重变化，追踪减脂进度")
+# 页面标题（紧凑）
+st.markdown(
+    '<div style="text-align:center;padding:16px 0 8px;">'
+    '<h1 style="margin:0;">📈 进度追踪</h1>'
+    '<div style="font-size:13px;color:var(--fc-text-muted);margin-top:4px;">'
+    '记录每日体重，可视化减脂进度</div>'
+    '</div>',
+    unsafe_allow_html=True,
+)
 
 # 检查是否有用户数据
 if "user_id" not in st.session_state:
@@ -33,6 +41,8 @@ if "user_id" not in st.session_state:
         st.session_state["user_id"] = latest[0]
     else:
         st.warning("请先在首页填写身体数据")
+        st.markdown('<div style="height:120px;"></div>', unsafe_allow_html=True)
+        render_bottom_nav(current="progress")
         st.stop()
 
 # 记录今日体重
@@ -50,7 +60,7 @@ with col1:
 with col2:
     st.write("")  # 占位对齐
     st.write("")
-    if st.button("记录体重", type="primary"):
+    if st.button("记录体重", type="primary", use_container_width=True):
         save_weight_log(st.session_state["user_id"], today_weight)
         st.success(f"已记录：{today_weight} kg")
         st.rerun()
@@ -116,3 +126,6 @@ if history and len(history) > 0:
     st.table(df)
 else:
     st.info("还没有体重记录。在上方记录你的第一次体重吧！")
+
+# 底部导航栏
+render_bottom_nav(current="progress")

@@ -4,7 +4,7 @@
 
 import streamlit as st
 from core.food_data import get_food_nutrition, FOOD_DATABASE
-from core.ui import apply_theme, render_nav, render_metric_cards, render_diet_log_item
+from core.ui import apply_theme, render_bottom_nav, render_metric_cards, render_diet_log_item
 from db.database import (
     save_diet_log,
     get_today_diet_logs,
@@ -12,16 +12,24 @@ from db.database import (
 )
 
 # 页面配置（必须是第一个 Streamlit 命令）
-st.set_page_config(page_title="饮食记录", page_icon="🍽️")
+st.set_page_config(
+    page_title="饮食记录",
+    page_icon="🍽️",
+    initial_sidebar_state="collapsed",  # 默认收起侧边栏
+)
 
 # 应用统一主题
 apply_theme()
 
-# 顶部导航栏
-render_nav(current="diet")
-
-st.title("饮食记录")
-st.markdown("记录你今天吃了什么")
+# 页面标题（紧凑）
+st.markdown(
+    '<div style="text-align:center;padding:16px 0 8px;">'
+    '<h1 style="margin:0;">🍽️ 饮食记录</h1>'
+    '<div style="font-size:13px;color:var(--fc-text-muted);margin-top:4px;">'
+    '记录每一餐，自动统计热量和三大营养素</div>'
+    '</div>',
+    unsafe_allow_html=True,
+)
 
 # 检查是否有用户数据
 if "user_id" not in st.session_state:
@@ -30,6 +38,8 @@ if "user_id" not in st.session_state:
         st.session_state["user_id"] = latest[0]
     else:
         st.warning("请先在首页填写身体数据")
+        st.markdown('<div style="height:120px;"></div>', unsafe_allow_html=True)
+        render_bottom_nav(current="diet")
         st.stop()
 
 # 食物选择和重量输入（手机端自动堆叠）
@@ -51,7 +61,7 @@ if nutrition:
         f"脂肪 {nutrition['fat']}g"
     )
 
-    if st.button("添加到今日记录", type="primary"):
+    if st.button("添加到今日记录", type="primary", use_container_width=True):
         save_diet_log(
             st.session_state["user_id"],
             food_name,
@@ -104,3 +114,6 @@ if logs:
             st.warning(f"今日已超标 {abs(remaining):.0f} 大卡，注意控制！")
 else:
     st.info("今天还没有记录，添加你的第一餐吧！")
+
+# 底部导航栏
+render_bottom_nav(current="diet")

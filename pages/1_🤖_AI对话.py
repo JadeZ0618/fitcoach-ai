@@ -7,19 +7,27 @@ AI 对话页面 - 和减脂助手聊天
 
 import streamlit as st
 from core.llm import chat_with_ai, is_mock_mode
-from core.ui import apply_theme, render_nav
+from core.ui import apply_theme, render_bottom_nav
 
 # 页面配置（必须是第一个 Streamlit 命令）
-st.set_page_config(page_title="AI 对话", page_icon="🤖")
+st.set_page_config(
+    page_title="AI 对话",
+    page_icon="🤖",
+    initial_sidebar_state="collapsed",  # 默认收起侧边栏
+)
 
 # 应用统一主题
 apply_theme()
 
-# 顶部导航栏
-render_nav(current="chat")
-
-st.title("AI 对话")
-st.markdown("和 FitCoach AI 聊聊减脂相关问题")
+# 页面标题（小一点，留出空间给底部 Tab）
+st.markdown(
+    '<div style="text-align:center;padding:16px 0 8px;">'
+    '<h1 style="margin:0;">🤖 AI 减脂助手</h1>'
+    '<div style="font-size:13px;color:var(--fc-text-muted);margin-top:4px;">'
+    '问问饮食、训练、平台期突破……已接入 DeepSeek + RAG 知识库</div>'
+    '</div>',
+    unsafe_allow_html=True,
+)
 
 if is_mock_mode():
     st.warning(
@@ -55,3 +63,6 @@ if user_input:
     with st.chat_message("assistant"):
         st.markdown(response)
     st.session_state["messages"].append({"role": "assistant", "content": response})
+
+# 底部导航栏（必须最后渲染，CSS 自动 fixed 到底部）
+render_bottom_nav(current="chat")
