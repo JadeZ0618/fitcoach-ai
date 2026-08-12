@@ -21,6 +21,24 @@ _THEME_CSS = """
 if (typeof structuredClone === 'undefined') {
     window.structuredClone = function(obj) { return JSON.parse(JSON.stringify(obj)); };
 }
+// ========== 底部 Tab 栏 class 自动注入 ==========
+// 给所有 "含 page_link 的 stHorizontalBlock" 加 fc-nav-ready class，
+// 这样 CSS 可以用普通 class 选择器定位，避开 :has() 的兼容性问题
+function _fcMarkBottomNav() {
+    var blocks = document.querySelectorAll('[data-testid="stHorizontalBlock"]');
+    for (var i = 0; i < blocks.length; i++) {
+        var b = blocks[i];
+        if (b.querySelector('[data-testid="stPageLink-NavLink"]') && !b.classList.contains('fc-nav-ready')) {
+            b.classList.add('fc-nav-ready');
+        }
+    }
+}
+_fcMarkBottomNav();
+// 监听 DOM 变化（Streamlit rerun 时会替换元素）
+try {
+    var _fcObserver = new MutationObserver(function() { _fcMarkBottomNav(); });
+    _fcObserver.observe(document.body, {childList: true, subtree: true});
+} catch(e) { /* 老浏览器不支持 MutationObserver 时跳过 */ }
 </script>
 <style>
 /* ===== 配色变量（统一管理，改这里全局生效） ===== */
@@ -262,10 +280,10 @@ h2, h3 {
 
 /* ============================================================
    底部 Tab 栏（移动端友好，桌面端也显示）
-   通过 CSS :has() 选择器找到含 4 个 page_link 的 stHorizontalBlock，
-   将其固定到屏幕底部
+   JS 脚本会扫描所有 stHorizontalBlock，
+   给含 page_link 的那个加 .fc-nav-ready class
    ============================================================ */
-[data-testid="stAppViewContainer"] [data-testid="stHorizontalBlock"]:has([data-testid="stPageLink-NavLink"]) {
+.fc-nav-ready {
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
@@ -276,13 +294,20 @@ h2, h3 {
     padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px)) !important;
     z-index: 999 !important;
     box-shadow: 0 -2px 12px rgba(0,0,0,0.06) !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
 }
 
-[data-testid="stAppViewContainer"] [data-testid="stHorizontalBlock"]:has([data-testid="stPageLink-NavLink"]) [data-testid="column"] {
+.fc-nav-ready [data-testid="column"] {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    width: auto !important;
     padding: 0 4px !important;
 }
 
-[data-testid="stAppViewContainer"] [data-testid="stHorizontalBlock"]:has([data-testid="stPageLink-NavLink"]) a[data-testid="stPageLink-NavLink"] {
+.fc-nav-ready a[data-testid="stPageLink-NavLink"] {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
@@ -300,7 +325,7 @@ h2, h3 {
     text-decoration: none !important;
 }
 
-[data-testid="stAppViewContainer"] [data-testid="stHorizontalBlock"]:has([data-testid="stPageLink-NavLink"]) a[data-testid="stPageLink-NavLink"]:hover {
+.fc-nav-ready a[data-testid="stPageLink-NavLink"]:hover {
     background: var(--fc-gray-light) !important;
     border-color: var(--fc-gray-light) !important;
     color: var(--fc-teal) !important;
@@ -325,18 +350,6 @@ h2, h3 {
 
 /* ===== 响应式：手机端 (< 768px) ===== */
 @media (max-width: 768px) {
-    /* 强制底部 Tab 栏保持水平排列（不变成全宽垂直堆叠） */
-    [data-testid="stAppViewContainer"] [data-testid="stHorizontalBlock"]:has([data-testid="stPageLink-NavLink"]) {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        align-items: stretch !important;
-    }
-    [data-testid="stAppViewContainer"] [data-testid="stHorizontalBlock"]:has([data-testid="stPageLink-NavLink"]) [data-testid="column"] {
-        flex: 1 1 0% !important;
-        min-width: 0 !important;
-        width: auto !important;
-    }
     /* 移动端完全隐藏侧边栏（不需要，已经有底部 Tab） */
     [data-testid="stSidebar"],
     [data-testid="stSidebarNav"],
@@ -402,7 +415,8 @@ def apply_theme():
 def render_bottom_nav(current="home"):
     """渲染底部 Tab 栏（手机和桌面都显示）。
 
-    通过 CSS :has() 选择器自动定位到屏幕底部。
+    通过 JS 自动给含 page_link 的 stHorizontalBlock 加 fc-nav-ready class，
+    CSS 再用 class 选择器把它 fixed 到屏幕底部。
     当前页面用高亮激活样式显示。
 
     Args:
