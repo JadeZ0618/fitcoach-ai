@@ -4,35 +4,23 @@
 
 import streamlit as st
 from core.food_data import get_food_nutrition, FOOD_DATABASE
+from core.ui import apply_theme, render_nav, render_metric_cards, render_diet_log_item
 from db.database import (
     save_diet_log,
     get_today_diet_logs,
     get_latest_user,
 )
 
-# 兼容性补丁：老浏览器/内嵌 webview 缺少 structuredClone
-# 强制显示滚动条（WorkBuddy 内嵌浏览器默认不显示）
-st.markdown(
-    """
-    <script>
-    if (typeof structuredClone === 'undefined') {
-        window.structuredClone = function(obj) {
-            return JSON.parse(JSON.stringify(obj));
-        };
-    }
-    </script>
-    <style>
-    html, body { overflow-y: scroll !important; }
-    [data-testid="stAppViewContainer"] { overflow-y: scroll !important; }
-    ::-webkit-scrollbar { -webkit-appearance: none; width: 10px; }
-    ::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,.3); border-radius: 5px; }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
+# 页面配置（必须是第一个 Streamlit 命令）
 st.set_page_config(page_title="饮食记录", page_icon="🍽️")
-st.title("🍽️ 饮食记录")
+
+# 应用统一主题
+apply_theme()
+
+# 顶部导航栏
+render_nav(current="diet")
+
+st.title("饮食记录")
 st.markdown("记录你今天吃了什么")
 
 # 检查是否有用户数据
@@ -44,7 +32,7 @@ if "user_id" not in st.session_state:
         st.warning("请先在首页填写身体数据")
         st.stop()
 
-# 食物选择和重量输入
+# 食物选择和重量输入（手机端自动堆叠）
 col1, col2 = st.columns([3, 1])
 
 with col1:
@@ -86,35 +74,20 @@ if logs:
     total_carbs = sum(log[7] for log in logs)
     total_fat = sum(log[8] for log in logs)
 
+    # 用卡片样式渲染每条记录（比 st.text 好看）
     for log in logs:
-        st.text(f"  {log[3]} {log[4]}g  -  {log[5]} 大卡")
+        render_diet_log_item(log[3], log[4], log[5])
 
     st.markdown("---")
-    st.markdown(
-        f'<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0;">'
-        f'<div style="background: #f0f7ff; padding: 16px; border-radius: 8px; text-align: center;">'
-        f'<div style="font-size: 13px; color: #666;">总热量</div>'
-        f'<div style="font-size: 24px; font-weight: bold; color: #1f77b4;">{total_cal:.0f}</div>'
-        f'<div style="font-size: 11px; color: #999;">大卡</div>'
-        f'</div>'
-        f'<div style="background: #fff5f0; padding: 16px; border-radius: 8px; text-align: center;">'
-        f'<div style="font-size: 13px; color: #666;">蛋白质</div>'
-        f'<div style="font-size: 24px; font-weight: bold; color: #ff7f0e;">{total_protein:.1f}</div>'
-        f'<div style="font-size: 11px; color: #999;">g</div>'
-        f'</div>'
-        f'<div style="background: #f0fff4; padding: 16px; border-radius: 8px; text-align: center;">'
-        f'<div style="font-size: 13px; color: #666;">碳水</div>'
-        f'<div style="font-size: 24px; font-weight: bold; color: #2ca02c;">{total_carbs:.1f}</div>'
-        f'<div style="font-size: 11px; color: #999;">g</div>'
-        f'</div>'
-        f'<div style="background: #fffbf0; padding: 16px; border-radius: 8px; text-align: center;">'
-        f'<div style="font-size: 13px; color: #666;">脂肪</div>'
-        f'<div style="font-size: 24px; font-weight: bold; color: #d4a017;">{total_fat:.1f}</div>'
-        f'<div style="font-size: 11px; color: #999;">g</div>'
-        f'</div>'
-        f'</div>',
-        unsafe_allow_html=True,
-    )
+
+    # 营养汇总卡片（桌面 4 列，手机自动 2 列）
+    items = [
+        ("总热量", f"{total_cal:.0f}", "大卡", "fc-blue"),
+        ("蛋白质", f"{total_protein:.1f}", "g", "fc-coral"),
+        ("碳水", f"{total_carbs:.1f}", "g", "fc-teal"),
+        ("脂肪", f"{total_fat:.1f}", "g", "fc-amber"),
+    ]
+    render_metric_cards(items, cols=4)
 
     # 和目标对比
     if "user_profile" in st.session_state:

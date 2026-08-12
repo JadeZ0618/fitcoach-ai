@@ -12,30 +12,18 @@ from db.database import (
     get_weight_history,
     get_latest_user,
 )
+from core.ui import apply_theme, render_nav, render_metric_cards
 
-# 兼容性补丁：老浏览器/内嵌 webview 缺少 structuredClone
-# 强制显示滚动条（WorkBuddy 内嵌浏览器默认不显示）
-st.markdown(
-    """
-    <script>
-    if (typeof structuredClone === 'undefined') {
-        window.structuredClone = function(obj) {
-            return JSON.parse(JSON.stringify(obj));
-        };
-    }
-    </script>
-    <style>
-    html, body { overflow-y: scroll !important; }
-    [data-testid="stAppViewContainer"] { overflow-y: scroll !important; }
-    ::-webkit-scrollbar { -webkit-appearance: none; width: 10px; }
-    ::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,.3); border-radius: 5px; }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
+# 页面配置（必须是第一个 Streamlit 命令）
 st.set_page_config(page_title="进度追踪", page_icon="📈")
-st.title("📈 进度追踪")
+
+# 应用统一主题
+apply_theme()
+
+# 顶部导航栏
+render_nav(current="progress")
+
+st.title("进度追踪")
 st.markdown("记录体重变化，追踪减脂进度")
 
 # 检查是否有用户数据
@@ -75,7 +63,7 @@ if history and len(history) > 0:
     # 转成 DataFrame 方便画图
     df = pd.DataFrame(history, columns=["date", "weight"])
 
-    # 画折线图
+    # 画折线图（使用主题配色）
     fig = px.line(
         df,
         x="date",
@@ -83,42 +71,47 @@ if history and len(history) > 0:
         title="体重变化",
         markers=True,
     )
+    fig.update_traces(
+        line_color="#0F6E56",
+        line_width=2,
+        marker=dict(size=6, color="#0F6E56"),
+    )
     fig.update_layout(
         xaxis_title="日期",
         yaxis_title="体重 (kg)",
         height=400,
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        font=dict(size=13, color="#2C2C2A"),
+        title_font=dict(size=16, color="#2C2C2A"),
+        xaxis=dict(gridcolor="#F1EFE8"),
+        yaxis=dict(gridcolor="#F1EFE8"),
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    # 统计数据（用自定义 HTML 避开 st.metric 触发 structuredClone 报错）
+    # 统计卡片（桌面 3 列，手机自动 2 列）
     st.markdown("---")
     start_w = df['weight'].iloc[0]
     current_w = df['weight'].iloc[-1]
     diff = current_w - start_w
-    diff_color = "#2ca02c" if diff < 0 else "#ff7f0e" if diff > 0 else "#666"
-    diff_sign = "+" if diff > 0 else ""
-    st.markdown(
-        f'<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0;">'
-        f'<div style="background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 16px; text-align: center; border-top: 3px solid #1f77b4;">'
-        f'<div style="font-size: 13px; color: #666; margin-bottom: 8px;">起始体重</div>'
-        f'<div style="font-size: 24px; font-weight: bold; color: #1f77b4;">{start_w}</div>'
-        f'<div style="font-size: 12px; color: #999; margin-top: 4px;">kg</div>'
-        f'</div>'
-        f'<div style="background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 16px; text-align: center; border-top: 3px solid #2ca02c;">'
-        f'<div style="font-size: 13px; color: #666; margin-bottom: 8px;">当前体重</div>'
-        f'<div style="font-size: 24px; font-weight: bold; color: #2ca02c;">{current_w}</div>'
-        f'<div style="font-size: 12px; color: #999; margin-top: 4px;">kg</div>'
-        f'</div>'
-        f'<div style="background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 16px; text-align: center; border-top: 3px solid {diff_color};">'
-        f'<div style="font-size: 13px; color: #666; margin-bottom: 8px;">总变化</div>'
-        f'<div style="font-size: 24px; font-weight: bold; color: {diff_color};">{diff_sign}{diff:.1f}</div>'
-        f'<div style="font-size: 12px; color: #999; margin-top: 4px;">kg</div>'
-        f'</div>'
-        f'</div>',
-        unsafe_allow_html=True,
-    )
 
-    # 数据表格（用 st.table 避免 st.dataframe 内部依赖 structuredClone）
+    # 减重=好(teal)，增重=注意(coral)，不变=灰
+    if diff < 0:
+        diff_color = "fc-teal"
+    elif diff > 0:
+        diff_color = "fc-coral"
+    else:
+        diff_color = "fc-gray"
+    diff_sign = "+" if diff > 0 else ""
+
+    items = [
+        ("起始体重", f"{start_w}", "kg", "fc-blue"),
+        ("当前体重", f"{current_w}", "kg", "fc-teal"),
+        ("总变化", f"{diff_sign}{diff:.1f}", "kg", diff_color),
+    ]
+    render_metric_cards(items, cols=3)
+
+    # 数据表格
     st.subheader("历史记录")
     st.table(df)
 else:

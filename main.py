@@ -9,65 +9,24 @@ FitCoach AI - 智能减脂助手
 import streamlit as st
 from core.tdee import calculate_tdee, ACTIVITY_LEVELS
 from core.llm import is_mock_mode
+from core.ui import apply_theme, render_nav, render_metric_cards, render_hero
 from db.database import init_db, save_user_profile
 
-# 初始化数据库（第一次运行会创建表）
-init_db()
-
-
-# 自定义 metric 卡片渲染函数（避开 st.metric 内部的 structuredClone）
-def _render_metrics(result: dict) -> str:
-    """渲染减脂方案的六个指标卡片。"""
-    items = [
-        ("基础代谢 (BMR)", f"{result['bmr']}", "大卡", "#1f77b4"),
-        ("每日消耗 (TDEE)", f"{result['tdee']}", "大卡", "#2ca02c"),
-        ("减脂建议摄入", f"{result['fat_loss_calories']}", "大卡", "#ff7f0e"),
-        ("蛋白质", f"{result['protein']}", "g", "#d62728"),
-        ("碳水", f"{result['carbs']}", "g", "#9467bd"),
-        ("脂肪", f"{result['fat']}", "g", "#8c564b"),
-    ]
-    cards_html = "".join(
-        f'<div style="background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 16px; text-align: center; border-top: 3px solid {color};">'
-        f'<div style="font-size: 13px; color: #666; margin-bottom: 8px;">{label}</div>'
-        f'<div style="font-size: 26px; font-weight: bold; color: {color};">{value}</div>'
-        f'<div style="font-size: 12px; color: #999; margin-top: 4px;">{unit}</div>'
-        f'</div>'
-        for label, value, unit, color in items
-    )
-    # 注意：HTML 字符串前不能有空格或换行，否则 Markdown 会当成代码块
-    return (
-        f'<div style="display: grid; grid-template-columns: repeat(3, 1fr); '
-        f'gap: 12px; margin: 16px 0;">{cards_html}</div>'
-    )
-
-
-# 兼容性补丁：为老版浏览器/内嵌 webview 提供 structuredClone polyfill
-# 强制显示滚动条（WorkBuddy 内嵌浏览器默认不显示）
-st.markdown(
-    """
-    <script>
-    if (typeof structuredClone === 'undefined') {
-        window.structuredClone = function(obj) {
-            return JSON.parse(JSON.stringify(obj));
-        };
-    }
-    </script>
-    <style>
-    html, body { overflow-y: scroll !important; }
-    [data-testid="stAppViewContainer"] { overflow-y: scroll !important; }
-    ::-webkit-scrollbar { -webkit-appearance: none; width: 10px; }
-    ::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,.3); border-radius: 5px; }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-# 页面配置
+# 页面配置（必须是第一个 Streamlit 命令）
 st.set_page_config(
     page_title="FitCoach AI",
     page_icon="🔥",
     layout="wide",
 )
+
+# 初始化数据库（第一次运行会创建表）
+init_db()
+
+# 应用统一主题（CSS + 响应式 + 兼容补丁）
+apply_theme()
+
+# 顶部导航栏
+render_nav(current="home")
 
 # 标题
 st.title("FitCoach AI")
@@ -116,26 +75,49 @@ if submitted:
 
     st.success("数据已保存！")
 
-    # 展示结果（用自定义 HTML 避免 st.metric 触发 structuredClone 报错）
-    st.header("你的减脂方案")
-    st.markdown(_render_metrics(result), unsafe_allow_html=True)
-
-    st.info(
-        f"每天吃 {result['fat_loss_calories']} 大卡，"
-        f"预计每周减重约 0.5kg。"
-        f"蛋白质 {result['protein']}g 帮你保住肌肉。"
+    # Hero 摘要卡片
+    render_hero(
+        label="每日减脂目标",
+        value=f"{result['fat_loss_calories']} 大卡",
+        subtitle=f"预计每周减重约 0.5kg | 蛋白质 {result['protein']}g 保肌肉",
     )
+
+    # 六个指标卡片（桌面 3 列，手机自动 2 列）
+    st.subheader("详细方案")
+    items = [
+        ("基础代谢 (BMR)", f"{result['bmr']}", "大卡", "fc-blue"),
+        ("每日消耗 (TDEE)", f"{result['tdee']}", "大卡", "fc-teal"),
+        ("减脂建议摄入", f"{result['fat_loss_calories']}", "大卡", "fc-coral"),
+        ("蛋白质", f"{result['protein']}", "g", "fc-coral"),
+        ("碳水", f"{result['carbs']}", "g", "fc-purple"),
+        ("脂肪", f"{result['fat']}", "g", "fc-amber"),
+    ]
+    render_metric_cards(items, cols=3)
 
 elif "user_profile" in st.session_state:
     # 显示之前保存的数据
     p = st.session_state["user_profile"]
     result = calculate_tdee(p["weight"], p["height"], p["age"], p["gender"], p["activity_level"])
 
-    st.header("你的减脂方案")
-    st.markdown(_render_metrics(result), unsafe_allow_html=True)
+    render_hero(
+        label="每日减脂目标",
+        value=f"{result['fat_loss_calories']} 大卡",
+        subtitle=f"预计每周减重约 0.5kg | 蛋白质 {result['protein']}g 保肌肉",
+    )
+
+    st.subheader("详细方案")
+    items = [
+        ("基础代谢 (BMR)", f"{result['bmr']}", "大卡", "fc-blue"),
+        ("每日消耗 (TDEE)", f"{result['tdee']}", "大卡", "fc-teal"),
+        ("减脂建议摄入", f"{result['fat_loss_calories']}", "大卡", "fc-coral"),
+        ("蛋白质", f"{result['protein']}", "g", "fc-coral"),
+        ("碳水", f"{result['carbs']}", "g", "fc-purple"),
+        ("脂肪", f"{result['fat']}", "g", "fc-amber"),
+    ]
+    render_metric_cards(items, cols=3)
 
 else:
-    st.markdown("👈 在左侧填入你的身体数据，点击「计算我的减脂方案」开始")
+    st.markdown("在左侧填入你的身体数据，点击「计算我的减脂方案」开始")
 
 st.markdown("---")
-st.markdown("📋 在左侧菜单选择其他功能：**AI 对话**、**饮食记录**、**进度追踪**")
+st.markdown("上方导航栏可切换功能：**AI 对话** | **饮食记录** | **进度追踪**")
