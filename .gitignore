@@ -7,3 +7,5 @@ venv/
 chroma_db/
 .idea/
 .vscode/
+outputs/
+test_poster*.png
