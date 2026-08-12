@@ -325,6 +325,18 @@ h2, h3 {
 
 /* ===== 响应式：手机端 (< 768px) ===== */
 @media (max-width: 768px) {
+    /* 强制底部 Tab 栏保持水平排列（不变成全宽垂直堆叠） */
+    [data-testid="stAppViewContainer"] [data-testid="stHorizontalBlock"]:has([data-testid="stPageLink-NavLink"]) {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: stretch !important;
+    }
+    [data-testid="stAppViewContainer"] [data-testid="stHorizontalBlock"]:has([data-testid="stPageLink-NavLink"]) [data-testid="column"] {
+        flex: 1 1 0% !important;
+        min-width: 0 !important;
+        width: auto !important;
+    }
     /* 移动端完全隐藏侧边栏（不需要，已经有底部 Tab） */
     [data-testid="stSidebar"],
     [data-testid="stSidebarNav"],

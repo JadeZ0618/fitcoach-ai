@@ -47,27 +47,27 @@ apply_theme()
 # ============================================================
 QUICK_EXAMPLES = [
     {
-        "name": "小刘",
+        "name": "35岁的小刘",
         "gender": "male",
-        "age": 28,
-        "height": 175,
-        "weight": 75.0,
+        "age": 35,
+        "height": 178,
+        "weight": 82.0,
         "activity": "轻度活动（每周运动 1-3 次）",
     },
     {
-        "name": "小王",
+        "name": "23岁的小王",
         "gender": "female",
-        "age": 26,
+        "age": 23,
         "height": 165,
-        "weight": 60.0,
+        "weight": 58.0,
         "activity": "中度活动（每周运动 3-5 次）",
     },
     {
-        "name": "小张",
+        "name": "55岁的老张",
         "gender": "male",
-        "age": 35,
-        "height": 180,
-        "weight": 90.0,
+        "age": 55,
+        "height": 170,
+        "weight": 78.0,
         "activity": "久坐不动（办公室工作，很少运动）",
     },
 ]
@@ -125,7 +125,7 @@ def render_form(p=None):
         # 第一行：姓名 / 性别 / 年龄
         row1_col1, row1_col2, row1_col3 = st.columns([2, 1, 1])
         with row1_col1:
-            name = st.text_input("昵称", value=(p or {}).get("name", "Jade"))
+            name = st.text_input("昵称", value=(p or {}).get("name", "我"))
         with row1_col2:
             gender = st.selectbox(
                 "性别",
