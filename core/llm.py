@@ -48,9 +48,17 @@ def _get_config(key, default=""):
 
 
 def is_mock_mode():
-    """检查是否在模拟模式"""
-    use_mock = str(_get_config("USE_MOCK_LLM", "true")).lower() == "true"
+    """
+    检查是否在模拟模式
+
+    逻辑：
+    - 如果明确设置了 USE_MOCK_LLM=true，就用模拟模式
+    - 如果没设 USE_MOCK_LLM 但有 API Key，自动用真实模式
+    - 如果没有 API Key，用模拟模式
+    """
+    use_mock = str(_get_config("USE_MOCK_LLM", "")).lower() == "true"
     api_key = _get_config("DEEPSEEK_API_KEY", "")
+    # 只有明确要求模拟模式，或者没有 API Key 时才用模拟
     return use_mock or not api_key
 
 
