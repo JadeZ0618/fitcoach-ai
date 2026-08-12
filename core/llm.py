@@ -138,6 +138,7 @@ def chat_with_ai(user_input, user_profile=None):
 
     # === 真实模式：调用 DeepSeek API ===
     from openai import OpenAI
+    from core.rag import get_context_for_prompt
 
     api_key = _get_config("DEEPSEEK_API_KEY")
     # DeepSeek 兼容 OpenAI 接口，所以用 OpenAI 的库来调用
@@ -157,6 +158,15 @@ def chat_with_ai(user_input, user_profile=None):
             f"体重 {user_profile.get('weight', '未知')}kg，"
             f"年龄 {user_profile.get('age', '未知')}岁，"
             f"性别 {user_profile.get('gender', '未知')}。"
+        )
+
+    # === RAG：从知识库检索相关内容，拼到 prompt 里 ===
+    # 这样 AI 回答时会参考 Jade 整理的减脂经验，不只是用通用知识
+    knowledge_context = get_context_for_prompt(user_input)
+    if knowledge_context:
+        system_prompt += (
+            "\n\n以下是从知识库中检索到的参考内容，请优先参考这些经验来回答：\n\n"
+            f"{knowledge_context}"
         )
 
     # 调用 API
