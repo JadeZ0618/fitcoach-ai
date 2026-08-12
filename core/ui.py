@@ -21,24 +21,46 @@ _THEME_CSS = """
 if (typeof structuredClone === 'undefined') {
     window.structuredClone = function(obj) { return JSON.parse(JSON.stringify(obj)); };
 }
-// ========== 底部 Tab 栏 class 自动注入 ==========
-// 给所有 "含 page_link 的 stHorizontalBlock" 加 fc-nav-ready class，
-// 这样 CSS 可以用普通 class 选择器定位，避开 :has() 的兼容性问题
-function _fcMarkBottomNav() {
-    var blocks = document.querySelectorAll('[data-testid="stHorizontalBlock"]');
-    for (var i = 0; i < blocks.length; i++) {
-        var b = blocks[i];
-        if (b.querySelector('[data-testid="stPageLink-NavLink"]') && !b.classList.contains('fc-nav-ready')) {
-            b.classList.add('fc-nav-ready');
-        }
+// ========== 底部 Tab 栏强制布局 ==========
+// 通过 fc-bottom-nav-end 这个 marker 反向定位它前一个含 page_link 的 stHorizontalBlock。
+// 直接用 inline style 设置（比 class + stylesheet 优先级高，老内核也支持）
+function _fcFixBottomNav() {
+    var ends = document.querySelectorAll('.fc-bottom-nav-end');
+    if (ends.length === 0) return;
+    var endMarker = ends[ends.length - 1];
+    // 反向找前一个含 page_link 或 fc-nav-active 的 stHorizontalBlock
+    var el = endMarker.previousElementSibling;
+    while (el && !el.matches('[data-testid="stHorizontalBlock"]')) {
+        el = el.previousElementSibling;
+    }
+    // 拿到 fc-nav-ready class 的同时直接强制样式（双重保险）
+    if (!el) return;
+    el.classList.add('fc-nav-ready');
+    // 直接用 inline style 强制 fixed bottom + flex row
+    el.style.cssText += ';position:fixed!important;bottom:0;left:0;right:0;background:white!important;border-top:1px solid #e8e8e8!important;box-shadow:0 -2px 12px rgba(0,0,0,0.06)!important;padding:4px 8px!important;z-index:999!important;display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:stretch!important;width:auto!important;height:auto!important;';
+    // 内部 column 强制 flex 1 1 0
+    var cols = el.querySelectorAll('[data-testid="column"]');
+    for (var i = 0; i < cols.length; i++) {
+        cols[i].style.cssText += ';flex:1 1 0%!important;min-width:0!important;width:auto!important;padding:0 4px!important;';
+    }
+    // a 标签垂直布局（icon + label）
+    var links = el.querySelectorAll('a[data-testid="stPageLink-NavLink"]');
+    for (var j = 0; j < links.length; j++) {
+        links[j].style.cssText += ';display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;text-align:center!important;padding:6px 4px!important;font-size:12px!important;background:transparent!important;border:1px solid transparent!important;border-radius:8px!important;margin:0!important;min-height:50px!important;color:#888780!important;text-decoration:none!important;';
     }
 }
-_fcMarkBottomNav();
-// 监听 DOM 变化（Streamlit rerun 时会替换元素）
+// 用 setInterval 兜底（保证元素渲染完必定会被打标，10 秒后停止节省 CPU）
+var _fcNavAttempts = 0;
+var _fcNavTimer = setInterval(function() {
+    _fcFixBottomNav();
+    _fcNavAttempts++;
+    if (_fcNavAttempts > 100) clearInterval(_fcNavTimer);
+}, 100);
+// MutationObserver 加速响应
 try {
-    var _fcObserver = new MutationObserver(function() { _fcMarkBottomNav(); });
+    var _fcObserver = new MutationObserver(function() { _fcFixBottomNav(); });
     _fcObserver.observe(document.body, {childList: true, subtree: true});
-} catch(e) { /* 老浏览器不支持 MutationObserver 时跳过 */ }
+} catch(e) { /* 跳过 */ }
 </script>
 <style>
 /* ===== 配色变量（统一管理，改这里全局生效） ===== */
@@ -429,6 +451,8 @@ def render_bottom_nav(current="home"):
         ("pages/2_🍽️_饮食记录.py", "🍽️", "饮食", "diet"),
         ("pages/3_📈_进度追踪.py", "📈", "进度", "progress"),
     ]
+    # marker 开头（JS 用它知道底部 nav 起点）
+    st.markdown('<div class="fc-bottom-nav-start"></div>', unsafe_allow_html=True)
     cols = st.columns(4)
     for i, (page, icon, label, key) in enumerate(pages):
         with cols[i]:
@@ -441,6 +465,8 @@ def render_bottom_nav(current="home"):
             else:
                 # 其他页面：用 st.page_link 渲染为可点击按钮（Streamlit 处理路由）
                 st.page_link(page, label=f"{icon} {label}", use_container_width=True)
+    # marker 结尾：JS 用它反向定位前面的 stHorizontalBlock 加 class
+    st.markdown('<div class="fc-bottom-nav-end"></div>', unsafe_allow_html=True)
 
 
 def render_metric_cards(items, cols=3):
