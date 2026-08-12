@@ -23,10 +23,12 @@ LLM 调用模块 - 连接 DeepSeek AI
 """
 
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
 # 加载 .env 文件里的配置（本地开发用）
-load_dotenv()
+# 用绝对路径确保不管从哪个目录启动 Streamlit 都能找到 .env
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 
 def _get_config(key, default=""):
